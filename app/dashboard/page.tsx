@@ -5,6 +5,7 @@ import { getRealPriceData, getRealCurrentPrices } from '@/lib/api/real-prices';
 import { getAlbertaRigCount, getRigCountHistory } from '@/lib/api/rig-count';
 import { getAlbertaProduction, getProductionByBasin, getCurrentProduction } from '@/lib/api/production';
 import { DashboardTabs } from '@/components/dashboard/DashboardTabs';
+export const revalidate = 86400;
 
 export default async function DashboardPage({
   searchParams,

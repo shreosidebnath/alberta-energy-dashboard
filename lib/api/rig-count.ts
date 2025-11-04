@@ -7,7 +7,7 @@ interface RigCountData {
 export async function getAlbertaRigCount(): Promise<RigCountData> {
   try {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 10000); 
+    const timeoutId = setTimeout(() => controller.abort(), 2000); 
     
     const response = await fetch(
       'https://bakerhughesrigcount.gcs-web.com/na-rig-count',

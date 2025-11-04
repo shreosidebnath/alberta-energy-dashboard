@@ -22,7 +22,7 @@ export async function getWTIPrices(): Promise<Array<{ date: string; price: numbe
     url.searchParams.append('length', '30');
     
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+    const timeoutId = setTimeout(() => controller.abort(), 2000);
     
     const response = await fetch(url.toString(), {
       headers: {

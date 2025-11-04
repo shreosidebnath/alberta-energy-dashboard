@@ -6,6 +6,7 @@ import { getRealCurrentPrices } from "@/lib/api/real-prices";
 import { getAlbertaRigCount } from "@/lib/api/rig-count";
 import { getCurrentProduction } from "@/lib/api/production";
 import { getWells } from "@/lib/api/wells";
+export const revalidate = 86400;
 
 export default async function Home() {
   const currentPrices = await getRealCurrentPrices();
