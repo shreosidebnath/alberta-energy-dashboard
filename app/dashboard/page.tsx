@@ -5,23 +5,44 @@ import { getRealPriceData, getRealCurrentPrices } from '@/lib/api/real-prices';
 import { getAlbertaRigCount, getRigCountHistory } from '@/lib/api/rig-count';
 import { getAlbertaProduction, getProductionByBasin, getCurrentProduction } from '@/lib/api/production';
 import { DashboardTabs } from '@/components/dashboard/DashboardTabs';
+
 export const revalidate = 86400;
 
-export default async function DashboardPage({
-  searchParams,
-}: {
+export async function generateStaticParams() {
+  return [
+    { tab: 'prices' },
+    { tab: 'production' },
+    { tab: 'basins' },
+    { tab: 'rigs' }
+  ];
+}
+
+interface DashboardPageProps {
   searchParams: Promise<{ tab?: string }>;
-}) {
-  const priceData = await getRealPriceData();
-  const currentPrices = await getRealCurrentPrices();
-  const rigCount = await getAlbertaRigCount();
-  const rigCountHistory = await getRigCountHistory();
-  const productionData = await getAlbertaProduction();
-  const basinData = await getProductionByBasin();
-  const currentProduction = await getCurrentProduction();
+}
+
+export default async function DashboardPage(props: DashboardPageProps) {
+  const searchParams = await props.searchParams;
   
-  const params = await searchParams;
-  const defaultTab = params.tab || 'prices';
+  const [
+    priceData,
+    currentPrices,
+    rigCount,
+    rigCountHistory,
+    productionData,
+    basinData,
+    currentProduction
+  ] = await Promise.all([
+    getRealPriceData(),
+    getRealCurrentPrices(),
+    getAlbertaRigCount(),
+    getRigCountHistory(),
+    getAlbertaProduction(),
+    getProductionByBasin(),
+    getCurrentProduction()
+  ]);
+  
+  const defaultTab = searchParams.tab || 'prices';
 
   return (
     <div className="container mx-auto px-4 py-6 md:py-8">
@@ -45,6 +66,9 @@ export default async function DashboardPage({
               month: 'short',
               year: 'numeric'
             })})
+          </span>
+          <span className="text-green-600 dark:text-green-400 font-semibold">
+            ⚡ Cached for 24 hours for fast loading
           </span>
         </div>
       </div>

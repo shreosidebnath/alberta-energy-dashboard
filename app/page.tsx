@@ -9,10 +9,12 @@ import { getWells } from "@/lib/api/wells";
 export const revalidate = 86400;
 
 export default async function Home() {
-  const currentPrices = await getRealCurrentPrices();
-  const rigCount = await getAlbertaRigCount();
-  const currentProduction = await getCurrentProduction();
-  const wells = await getWells();
+  const [currentPrices, rigCount, currentProduction, wells] = await Promise.all([
+    getRealCurrentPrices(),
+    getAlbertaRigCount(),
+    getCurrentProduction(),
+    getWells()
+  ]);
   
   const activeWells = wells.filter(w => w.status === 'active').length;
   
