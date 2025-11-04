@@ -21,12 +21,18 @@ export async function getWTIPrices(): Promise<Array<{ date: string; price: numbe
     url.searchParams.append('offset', '0');
     url.searchParams.append('length', '30');
     
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+    
     const response = await fetch(url.toString(), {
       headers: {
         'Accept': 'application/json'
       },
+      signal: controller.signal,
       next: { revalidate: 3600 }
     });
+    
+    clearTimeout(timeoutId);
 
     if (!response.ok) {
       const errorText = await response.text();
@@ -76,7 +82,7 @@ export async function getRealPriceData() {
       differential: Number(item.differential.toFixed(2))
     }));
   } catch (error) {
-    console.error('Error getting real price data:', error);
+    console.error('Error getting real price data, using fallback:', error);
     const { getPriceData } = await import('./prices');
     return getPriceData();
   }
@@ -104,7 +110,7 @@ export async function getRealCurrentPrices() {
       lastUpdated: latest.date
     };
   } catch (error) {
-    console.error('Error getting current prices:', error);
+    console.error('Error getting current prices, using fallback:', error);
     const { getCurrentPrices } = await import('./prices');
     return getCurrentPrices();
   }
