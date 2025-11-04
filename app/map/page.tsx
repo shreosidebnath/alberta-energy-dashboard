@@ -1,13 +1,9 @@
 import { WellsMap } from '@/components/map/WellsMap';
 import { getWells } from '@/lib/api/wells';
-import { getAlbertaRigCount } from '@/lib/api/rig-count';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-
-export const revalidate = 86400;
 
 export default async function MapPage() {
   const wells = await getWells();
-  const rigCount = await getAlbertaRigCount();
   
   const stats = {
     shown: wells.length,
@@ -20,7 +16,7 @@ export default async function MapPage() {
   const totalStats = {
     facilities: 150,
     active: 18000,
-    drilling: rigCount.count,
+    drilling: 124,
     oil: 12500,
     gas: 5500
   };
@@ -34,7 +30,7 @@ export default async function MapPage() {
         </p>
         <p className="text-xs text-muted-foreground mt-2">
           Facility locations sourced from Alberta Energy Regulator (AER) public data. 
-          Displaying {stats.shown} significant production sites out of thousands of wells in Alberta.
+          Showing {stats.shown} major production sites including upgraders, SAGD facilities, and significant well pads.
         </p>
       </div>
 
@@ -45,43 +41,43 @@ export default async function MapPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.shown}</div>
-            <p className="text-xs text-muted-foreground">shown on map</p>
+            <p className="text-xs text-muted-foreground">of ~{totalStats.facilities} shown</p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Active Wells (AB)</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">Active Wells</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-500">~{(totalStats.active / 1000).toFixed(0)}k</div>
-            <p className="text-xs text-muted-foreground">{stats.active} facilities shown</p>
+            <div className="text-2xl font-bold text-green-500">{stats.active}</div>
+            <p className="text-xs text-muted-foreground">of ~{totalStats.active.toLocaleString()} in AB</p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Active Rigs (AB)</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">Drilling Rigs</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-yellow-500">{totalStats.drilling}</div>
-            <p className="text-xs text-muted-foreground">currently drilling</p>
+            <div className="text-2xl font-bold text-yellow-500">{stats.drilling}</div>
+            <p className="text-xs text-muted-foreground">of ~{totalStats.drilling} active rigs</p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Oil Wells (AB)</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">Oil Sites</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">~{(totalStats.oil / 1000).toFixed(0)}k</div>
-            <p className="text-xs text-muted-foreground">{stats.oil} facilities shown</p>
+            <div className="text-2xl font-bold">{stats.oil}</div>
+            <p className="text-xs text-muted-foreground">of ~{totalStats.oil.toLocaleString()} oil wells</p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Gas Wells (AB)</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">Gas Sites</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">~{(totalStats.gas / 1000).toFixed(0)}k</div>
-            <p className="text-xs text-muted-foreground">{stats.gas} facilities shown</p>
+            <div className="text-2xl font-bold">{stats.gas}</div>
+            <p className="text-xs text-muted-foreground">of ~{totalStats.gas.toLocaleString()} gas wells</p>
           </CardContent>
         </Card>
       </div>
