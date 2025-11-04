@@ -1,39 +1,24 @@
-'use client';
-
-import { useEffect, useState } from 'react';
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { TrendingUp, Map, BarChart3 } from "lucide-react";
-import { Skeleton } from "@/components/ui/skeleton";
+import { getRealCurrentPrices } from "@/lib/api/real-prices";
+import { getAlbertaRigCount } from "@/lib/api/rig-count";
+import { getCurrentProduction } from "@/lib/api/production";
+import { getWells } from "@/lib/api/wells";
 
-export default function Home() {
-  const [data, setData] = useState<any>(null);
-  const [wells, setWells] = useState<any[]>([]);
+export const revalidate = 86400;
 
-  useEffect(() => {
-    async function fetchData() {
-      try {
-        const [apiResponse, wellsResponse] = await Promise.all([
-          fetch('/api/dashboard-data'),
-          fetch('/api/wells-data')
-        ]);
-        
-        const apiData = await apiResponse.json();
-        const wellsData = await wellsResponse.json();
-        
-        setData(apiData);
-        setWells(wellsData);
-      } catch (err) {
-        console.error(err);
-      }
-    }
-
-    fetchData();
-  }, []);
-
+export default async function Home() {
+  const [currentPrices, rigCount, currentProduction, wells] = await Promise.all([
+    getRealCurrentPrices(),
+    getAlbertaRigCount(),
+    getCurrentProduction(),
+    getWells()
+  ]);
+  
   const activeWells = wells.filter(w => w.status === 'active').length;
-
+  
   return (
     <div className="container mx-auto px-4 py-16">
       <div className="text-center mb-16">
@@ -99,45 +84,34 @@ export default function Home() {
 
       <Card className="bg-muted">
         <CardContent className="pt-6">
-          {!data ? (
-            <div className="grid md:grid-cols-5 gap-8 text-center">
-              {[...Array(5)].map((_, i) => (
-                <div key={i}>
-                  <Skeleton className="h-10 w-20 mx-auto mb-2" />
-                  <Skeleton className="h-4 w-24 mx-auto" />
-                </div>
-              ))}
+          <div className="grid md:grid-cols-5 gap-8 text-center">
+            <div>
+              <div className="text-4xl font-bold mb-2">
+                {(currentProduction.oil.current / 1000).toFixed(1)}M
+              </div>
+              <div className="text-sm text-muted-foreground">Barrels/Day</div>
             </div>
-          ) : (
-            <div className="grid md:grid-cols-5 gap-8 text-center">
-              <div>
-                <div className="text-4xl font-bold mb-2">
-                  {(data.currentProduction.oil.current / 1000).toFixed(1)}M
-                </div>
-                <div className="text-sm text-muted-foreground">Barrels/Day</div>
+            <div>
+              <div className="text-4xl font-bold mb-2">
+                ${currentPrices.wti.price.toFixed(2)}
               </div>
-              <div>
-                <div className="text-4xl font-bold mb-2">
-                  ${data.currentPrices.wti.price.toFixed(2)}
-                </div>
-                <div className="text-sm text-muted-foreground">WTI Price</div>
-              </div>
-              <div>
-                <div className="text-4xl font-bold mb-2">
-                  ${data.currentPrices.wcs.price.toFixed(2)}
-                </div>
-                <div className="text-sm text-muted-foreground">WCS Price</div>
-              </div>
-              <div>
-                <div className="text-4xl font-bold mb-2">{data.rigCount.count}</div>
-                <div className="text-sm text-muted-foreground">Active Rigs</div>
-              </div>
-              <div>
-                <div className="text-4xl font-bold mb-2">{activeWells}+</div>
-                <div className="text-sm text-muted-foreground">Major Facilities</div>
-              </div>
+              <div className="text-sm text-muted-foreground">WTI Price</div>
             </div>
-          )}
+            <div>
+              <div className="text-4xl font-bold mb-2">
+                ${currentPrices.wcs.price.toFixed(2)}
+              </div>
+              <div className="text-sm text-muted-foreground">WCS Price</div>
+            </div>
+            <div>
+              <div className="text-4xl font-bold mb-2">{rigCount.count}</div>
+              <div className="text-sm text-muted-foreground">Active Rigs</div>
+            </div>
+            <div>
+              <div className="text-4xl font-bold mb-2">{activeWells}+</div>
+              <div className="text-sm text-muted-foreground">Major Facilities</div>
+            </div>
+          </div>
         </CardContent>
       </Card>
     </div>

@@ -1,78 +1,30 @@
-'use client';
-
-import { useEffect, useState } from 'react';
 import { PriceCard } from '@/components/dashboard/PriceCard';
 import { RigCountCard } from '@/components/dashboard/RigCountCard';
 import { ProductionCard } from '@/components/dashboard/ProductionCard';
+import { getRealPriceData, getRealCurrentPrices } from '@/lib/api/real-prices';
+import { getAlbertaRigCount, getRigCountHistory } from '@/lib/api/rig-count';
+import { getAlbertaProduction, getProductionByBasin, getCurrentProduction } from '@/lib/api/production';
 import { DashboardTabs } from '@/components/dashboard/DashboardTabs';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
 
-function CardSkeleton() {
-  return (
-    <Card>
-      <CardHeader className="pb-2">
-        <Skeleton className="h-4 w-24" />
-      </CardHeader>
-      <CardContent>
-        <Skeleton className="h-8 w-20 mb-2" />
-        <Skeleton className="h-3 w-32 mb-2" />
-        <Skeleton className="h-6 w-16" />
-      </CardContent>
-    </Card>
-  );
-}
+export const revalidate = 86400;
 
-export default function DashboardPage({ searchParams }: { searchParams: { tab?: string } }) {
-  const [loading, setLoading] = useState(true);
-  const [data, setData] = useState<any>(null);
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ tab?: string }>;
+}) {
+  const params = await searchParams;
+  const defaultTab = params.tab || 'prices';
 
-  useEffect(() => {
-    async function fetchData() {
-      try {
-        const response = await fetch('/api/dashboard-data');
-        const result = await response.json();
-        setData(result);
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    fetchData();
-    const interval = setInterval(fetchData, 5 * 60 * 1000);
-    return () => clearInterval(interval);
-  }, []);
-
-  const defaultTab = searchParams.tab || 'prices';
-
-  if (loading) {
-    return (
-      <div className="container mx-auto px-4 py-6 md:py-8">
-        <div className="mb-6 md:mb-8">
-          <h1 className="text-3xl md:text-4xl font-bold mb-2">Energy Dashboard</h1>
-          <p className="text-sm md:text-base text-muted-foreground mb-3">
-            Loading real-time data...
-          </p>
-        </div>
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 md:gap-4 mb-6 md:mb-8">
-          {[...Array(6)].map((_, i) => (
-            <CardSkeleton key={i} />
-          ))}
-        </div>
-      </div>
-    );
-  }
-
-  if (!data) {
-    return (
-      <div className="container mx-auto px-4 py-6 md:py-8">
-        <h1 className="text-3xl md:text-4xl font-bold mb-2">Energy Dashboard</h1>
-        <p className="text-sm text-red-500">Failed to load data</p>
-      </div>
-    );
-  }
+  const [priceData, currentPrices, rigCount, rigCountHistory, productionData, basinData, currentProduction] = await Promise.all([
+    getRealPriceData(),
+    getRealCurrentPrices(),
+    getAlbertaRigCount(),
+    getRigCountHistory(),
+    getAlbertaProduction(),
+    getProductionByBasin(),
+    getCurrentProduction()
+  ]);
 
   return (
     <div className="container mx-auto px-4 py-6 md:py-8">
@@ -83,7 +35,7 @@ export default function DashboardPage({ searchParams }: { searchParams: { tab?: 
         </p>
         <div className="flex flex-col gap-1 text-xs text-muted-foreground">
           <span>
-            WTI: Real-time EIA data ({new Date(data.currentPrices.lastUpdated).toLocaleDateString('en-US', {
+            WTI: Real-time EIA data ({new Date(currentPrices.lastUpdated).toLocaleDateString('en-US', {
               month: 'short',
               day: 'numeric'
             })})
@@ -92,7 +44,7 @@ export default function DashboardPage({ searchParams }: { searchParams: { tab?: 
             WCS: Calculated using historical differential
           </span>
           <span>
-            Production: AER ST37 ({new Date(data.currentProduction.date).toLocaleDateString('en-US', {
+            Production: AER ST37 ({new Date(currentProduction.date).toLocaleDateString('en-US', {
               month: 'short',
               year: 'numeric'
             })})
@@ -103,37 +55,37 @@ export default function DashboardPage({ searchParams }: { searchParams: { tab?: 
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 md:gap-4 mb-6 md:mb-8">
         <PriceCard
           title="WTI Crude"
-          price={data.currentPrices.wti.price}
-          change={data.currentPrices.wti.change}
+          price={currentPrices.wti.price}
+          change={currentPrices.wti.change}
           description="West Texas Intermediate"
         />
         <PriceCard
           title="WCS Crude"
-          price={data.currentPrices.wcs.price}
-          change={data.currentPrices.wcs.change}
+          price={currentPrices.wcs.price}
+          change={currentPrices.wcs.change}
           description="Western Canadian Select"
         />
         <PriceCard
           title="Differential"
-          price={data.currentPrices.differential.price}
-          change={data.currentPrices.differential.change}
+          price={currentPrices.differential.price}
+          change={currentPrices.differential.change}
           description="WTI-WCS Spread"
         />
         <RigCountCard
-          count={data.rigCount.count}
-          change={data.rigCount.change}
+          count={rigCount.count}
+          change={rigCount.change}
         />
         <ProductionCard
           title="Oil Production"
-          value={data.currentProduction.oil.current}
-          change={data.currentProduction.oil.change}
+          value={currentProduction.oil.current}
+          change={currentProduction.oil.change}
           unit="barrels per day"
           type="oil"
         />
         <ProductionCard
           title="Gas Production"
-          value={data.currentProduction.gas.current}
-          change={data.currentProduction.gas.change}
+          value={currentProduction.gas.current}
+          change={currentProduction.gas.change}
           unit="MMcf per day"
           type="gas"
         />
@@ -141,10 +93,10 @@ export default function DashboardPage({ searchParams }: { searchParams: { tab?: 
 
       <DashboardTabs
         defaultTab={defaultTab}
-        priceData={data.priceData}
-        productionData={data.productionData}
-        basinData={data.basinData}
-        rigCountHistory={data.rigCountHistory}
+        priceData={priceData}
+        productionData={productionData}
+        basinData={basinData}
+        rigCountHistory={rigCountHistory}
       />
     </div>
   );
