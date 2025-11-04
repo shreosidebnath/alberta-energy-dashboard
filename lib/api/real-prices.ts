@@ -8,7 +8,7 @@ interface EIAResponse {
 }
 
 export async function getWTIPrices(): Promise<Array<{ date: string; price: number }>> {
-  const apiKey = 'UEgmWvnRlfy05pGFS0EKAzyyLPJ17GWAmRjTMmm';
+  const apiKey = 'mUEgmWvnRlfy05pGFS0EKAzyyLPJ17GWAmRjTMmm';
   
   try {
     const url = new URL('https://api.eia.gov/v2/petroleum/pri/spt/data/');
